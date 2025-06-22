@@ -54,11 +54,11 @@ export default function Sidebar() {
           </div>
 
           <h2 className="text-xl font-bold mb-4 hidden md:block">
-            Billing System
+            Amrut Dudh Kendra
           </h2>
 
           <Link
-            href="/"
+            href="/dashboard"
             className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
             onClick={() => setOpen(false)}
           >
@@ -71,14 +71,6 @@ export default function Sidebar() {
             onClick={() => setOpen(false)}
           >
             Inventory
-          </Link>
-
-          <Link
-            href="/billing"
-            className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
-            onClick={() => setOpen(false)}
-          >
-            Billing
           </Link>
 
           {/* Products dropdown */}
