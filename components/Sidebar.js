@@ -58,7 +58,7 @@ export default function Sidebar() {
           </h2>
 
           <Link
-            href="/dashboard"
+            href="/"
             className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
             onClick={() => setOpen(false)}
           >

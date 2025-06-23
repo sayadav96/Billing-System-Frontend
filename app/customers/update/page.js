@@ -11,14 +11,23 @@ import {
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [allProducts, setAllProducts] = useState([]);
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
     address: "",
     notes: "",
     outstandingAmount: "",
+    defaultProducts: [],
   });
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_DOMAIN}/api/products`)
+      .then((res) => res.json())
+      .then((data) => setAllProducts(data.products || []));
+  }, []);
 
   useEffect(() => {
     fetchCustomers();
@@ -26,7 +35,9 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_DOMAIN}/api/customers`);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_DOMAIN}/api/customers`
+      );
       const data = await res.json();
       setCustomers(data.customers || []);
     } catch {
@@ -42,6 +53,7 @@ export default function CustomersPage() {
       address: customer.address || "",
       notes: customer.notes || "",
       outstandingAmount: customer.outstandingAmount || "",
+      defaultProducts: customer.defaultProducts || [],
     });
   };
 
@@ -60,11 +72,36 @@ export default function CustomersPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleProductChange = (index, field, value) => {
+    const updated = [...form.defaultProducts];
+    updated[index][field] = value;
+    setForm({ ...form, defaultProducts: updated });
+  };
+
+  const addProductRow = () => {
+    setForm({
+      ...form,
+      defaultProducts: [
+        ...form.defaultProducts,
+        { product: "", customPrice: "" },
+      ],
+    });
+  };
+
+  const removeProduct = (index) => {
+    const updated = [...form.defaultProducts];
+    updated.splice(index, 1);
+    setForm({ ...form, defaultProducts: updated });
+  };
+
   const updateCustomer = async () => {
     try {
       const payload = {
         ...form,
         outstandingAmount: parseFloat(form.outstandingAmount || 0),
+        defaultProducts: form.defaultProducts.filter(
+          (p) => p.product && p.customPrice
+        ),
       };
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_DOMAIN}/api/customers/${editingId}`,
@@ -130,6 +167,49 @@ export default function CustomersPage() {
                     className="p-2 border rounded"
                   />
                 </div>
+                <h2 className="mt-4 font-semibold">Default Products</h2>
+                {form.defaultProducts.map((dp, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2">
+                    <select
+                      value={dp.product}
+                      onChange={(e) =>
+                        handleProductChange(idx, "product", e.target.value)
+                      }
+                      className="p-2 border rounded flex-1"
+                    >
+                      <option value="">Select Product</option>
+                      {allProducts.map((p) => (
+                        <option key={p._id} value={p._id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      value={dp.customPrice}
+                      onChange={(e) =>
+                        handleProductChange(idx, "customPrice", e.target.value)
+                      }
+                      className="w-32 p-2 border rounded"
+                      placeholder="Price"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeProduct(idx)}
+                      className="text-red-600 font-bold px-2"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addProductRow}
+                  className="text-sm text-blue-600 underline mt-1"
+                >
+                  + Add Product
+                </button>
+
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={updateCustomer}

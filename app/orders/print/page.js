@@ -95,53 +95,53 @@ export default function PrintBillPage() {
   //   window.open(`https://wa.me/91${phone}?text=${message}`, "_blank");
   // };
 
-  const handleShareOnWhatsApp = async () => {
-    if (!customerId) return;
+const handleShareOnWhatsApp = async () => {
+  if (!customerId) return;
 
-    const customer = customers.find((c) => c._id === customerId);
-    const phone = customer?.phone?.replace(/\D/g, "");
-    if (!phone) return alert("No valid phone number found");
+  const customer = customers.find((c) => c._id === customerId);
+  const phone = customer?.phone?.replace(/\D/g, "");
+  if (!phone) return alert("No valid phone number found");
 
-    const formattedDate = `${new Date(date)
-      .getDate()
-      .toString()
-      .padStart(2, "0")}/${(new Date(date).getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}/${new Date(date).getFullYear()}`;
+  const formattedDate = `${new Date(date)
+    .getDate()
+    .toString()
+    .padStart(2, "0")}/${(new Date(date).getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}/${new Date(date).getFullYear()}`;
 
-    // 1. Capture screenshot
-    const canvas = await html2canvas(billRef.current);
-    const dataUrl = canvas.toDataURL("image/png");
+  // Capture image
+  const canvas = await html2canvas(billRef.current);
+  const dataUrl = canvas.toDataURL("image/png");
 
-    // 2. Upload to server
-    const uploadRes = await fetch("/api/upload-bill", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageData: dataUrl }),
-    });
+  // Upload
+  const uploadRes = await fetch("/api/upload-bill", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageData: dataUrl }),
+  });
 
-    const result = await uploadRes.json();
-    if (!result.url) return alert("Image upload failed");
+  const result = await uploadRes.json();
+  if (!result.url) return alert("Image upload failed");
 
-    // 3. Prepare WhatsApp message
-    const message = encodeURIComponent(
-      `आप का ${formattedDate} का बिल इस लिंक में है:\n${result.url}`
-    );
+  const message = encodeURIComponent(
+    `आप का ${formattedDate} का बिल इस लिंक में है:\n${result.url}`
+  );
 
-    // 4. Create temporary anchor and trigger click
-    const link = document.createElement("a");
-    link.href = `https://wa.me/91${phone}?text=${message}`;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link); // append required in some browsers
-    link.click();
-    document.body.removeChild(link);
+  // ✅ Best compatibility with Android mobile browsers
+  window.location.href = `https://wa.me/91${phone}?text=${message}`;
+};
+
+
+  const getTodayLocal = () => {
+    const today = new Date();
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    return today.toISOString().split("T")[0];
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded print:shadow-none print:p-2 print:max-w-full print:bg-white">
       {/* <h2 className="text-3xl text-center font-bold mb-8">Amrut Dudh Kendra</h2> */}
-      <img src="/Amrut Dudh kendra (2).png" className="w-[200px] mx-auto" />
+      <img src="/Amrut Dudh kendra (2).png" className="w-[200px] mx-auto print:block" />
       <div className="grid md:grid-cols-2 gap-4 mb-4 no-print print:hidden">
         <select
           value={customerId}
@@ -155,13 +155,12 @@ export default function PrintBillPage() {
             </option>
           ))}
         </select>
-
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           className="border p-2 rounded print:hidden"
-          max={new Date().toISOString().split("T")[0]}
+          max={getTodayLocal()}
         />
       </div>
 
