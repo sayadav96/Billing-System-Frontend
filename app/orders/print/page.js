@@ -20,15 +20,13 @@ export default function PrintBillPage() {
   }, []);
 
   const fetchMergedOrders = async () => {
-    const formattedDate = new Date(date).toISOString().split("T")[0]; // YYYY-MM-DD only
+    const formattedDate = new Date(date).toISOString().split("T")[0];
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_DOMAIN}/api/orders?customer=${customerId}&singleDate=${formattedDate}`
     );
 
     const data = await res.json();
-
     const merged = {};
-
     let tempTotal = 0;
 
     data.orders.forEach((order) => {
@@ -53,84 +51,55 @@ export default function PrintBillPage() {
 
     setMergedProducts(Object.values(merged));
     setCustomerName(customer?.name || "");
-    setOutstanding(customer?.outstandingAmount || 0);
+    setOutstanding(customer?.outstandingAmount - tempTotal || 0);
     setTotal(tempTotal);
-    setFinalTotal(tempTotal + (customer?.outstandingAmount || 0));
+
+    // ✅ FIXED: Don't double add today's bill
+    setFinalTotal(customer?.outstandingAmount || 0);
   };
 
   const handlePrint = () => {
     window.print();
   };
 
-  // const handleShareOnWhatsApp = async () => {
-  //   if (!customerId) return;
+  const handleShareOnWhatsApp = async () => {
+    if (!customerId) return;
 
-  //   const customer = customers.find((c) => c._id === customerId);
-  //   const phone = customer?.phone?.replace(/\D/g, "");
-  //   if (!phone) return alert("No valid phone number found");
+    const customer = customers.find((c) => c._id === customerId);
+    const phone = customer?.phone?.replace(/\D/g, "");
+    if (!phone) return alert("No valid phone number found");
 
-  //   const canvas = await html2canvas(billRef.current);
-  //   const dataUrl = canvas.toDataURL("image/png");
+    const formattedDate = `${new Date(date)
+      .getDate()
+      .toString()
+      .padStart(2, "0")}/${(new Date(date).getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${new Date(date).getFullYear()}`;
 
-  //   // Upload to Cloudinary
-  //   const uploadRes = await fetch("/api/upload-bill", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ imageData: dataUrl }),
-  //   });
+    // 1. Capture screenshot
+    const canvas = await html2canvas(billRef.current);
+    const dataUrl = canvas.toDataURL("image/png");
 
-  //   const result = await uploadRes.json();
-  //   if (!result.url) return alert("Image upload failed");
+    // 2. Upload to server
+    const uploadRes = await fetch("/api/upload-bill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageData: dataUrl }),
+    });
 
-  //   const formattedDate = `${new Date(date)
-  //     .getDate()
-  //     .toString()
-  //     .padStart(2, "0")}/${(new Date(date).getMonth() + 1)
-  //     .toString()
-  //     .padStart(2, "0")}/${new Date(date).getFullYear()}`;
+    const result = await uploadRes.json();
+    if (!result.url) return alert("Image upload failed");
 
-  //   const message = encodeURIComponent(
-  //     `आप का ${formattedDate} का बिल इस लिंक में है:\n${result.url}`
-  //   );
-  //   window.open(`https://wa.me/91${phone}?text=${message}`, "_blank");
-  // };
+    // 3. Store the link to use in href
+    const message = encodeURIComponent(
+      `आप का ${formattedDate} का बिल इस लिंक में है:\n${result.url}`
+    );
 
-const handleShareOnWhatsApp = async () => {
-  if (!customerId) return;
+    const whatsappLink = `https://wa.me/91${phone}?text=${message}`;
 
-  const customer = customers.find((c) => c._id === customerId);
-  const phone = customer?.phone?.replace(/\D/g, "");
-  if (!phone) return alert("No valid phone number found");
-
-  const formattedDate = `${new Date(date)
-    .getDate()
-    .toString()
-    .padStart(2, "0")}/${(new Date(date).getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}/${new Date(date).getFullYear()}`;
-
-  // Capture image
-  const canvas = await html2canvas(billRef.current);
-  const dataUrl = canvas.toDataURL("image/png");
-
-  // Upload
-  const uploadRes = await fetch("/api/upload-bill", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageData: dataUrl }),
-  });
-
-  const result = await uploadRes.json();
-  if (!result.url) return alert("Image upload failed");
-
-  const message = encodeURIComponent(
-    `आप का ${formattedDate} का बिल इस लिंक में है:\n${result.url}`
-  );
-
-  // ✅ Best compatibility with Android mobile browsers
-  window.location.href = `https://wa.me/91${phone}?text=${message}`;
-};
-
+    // ⛔ Don’t trigger with JS. Use anchor instead (next step)
+    window.open(whatsappLink, "_blank");
+  };
 
   const getTodayLocal = () => {
     const today = new Date();
@@ -140,8 +109,10 @@ const handleShareOnWhatsApp = async () => {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded print:shadow-none print:p-2 print:max-w-full print:bg-white">
-      {/* <h2 className="text-3xl text-center font-bold mb-8">Amrut Dudh Kendra</h2> */}
-      <img src="/Amrut Dudh kendra (2).png" className="w-[200px] mx-auto print:block" />
+      <img
+        src="/Amrut Dudh kendra (2).png"
+        className="w-[200px] mx-auto print:block"
+      />
       <div className="grid md:grid-cols-2 gap-4 mb-4 no-print print:hidden">
         <select
           value={customerId}
@@ -166,7 +137,7 @@ const handleShareOnWhatsApp = async () => {
 
       <button
         onClick={fetchMergedOrders}
-        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 print:hidden print:"
+        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 print:hidden"
       >
         Fetch Bill
       </button>
@@ -189,7 +160,7 @@ const handleShareOnWhatsApp = async () => {
           <hr className="mb-2" />
 
           {mergedProducts.map((p) => (
-            <div key={p.name} className="flex justify-between  py-1">
+            <div key={p.name} className="flex justify-between py-1">
               <span>
                 {p.name} :{" "}
                 {p.quantity.map((q, idx) => (
@@ -202,18 +173,17 @@ const handleShareOnWhatsApp = async () => {
               <span>₹{p.amount.toFixed(2)}</span>
             </div>
           ))}
-
           <hr className="my-2" />
+          <div className="flex justify-between">
+            <span>Previous Outstanding</span>
+            <span>₹{outstanding.toFixed(2)}</span>
+          </div>
           <div className="flex justify-between">
             <span>Total</span>
             <span>₹{total.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between">
-            <span>Outstanding</span>
-            <span>₹{outstanding.toFixed(2)}</span>
-          </div>
           <div className="flex justify-between font-bold mt-2">
-            <span>Final Total</span>
+            <span>Final Total to Pay</span>
             <span>₹{finalTotal.toFixed(2)}</span>
           </div>
 

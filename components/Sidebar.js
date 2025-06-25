@@ -15,7 +15,7 @@ const customerLinks = [
 ];
 
 const orderLinks = [
-  { label: "Add", href: "/orders/add" },
+  { label: "Add Order", href: "/orders/add" },
   { label: "All Orders", href: "/orders/all" },
   { label: "Print Orders", href: "/orders/print" },
 ];
@@ -59,7 +59,7 @@ export default function Sidebar() {
 
           <Link
             href="/"
-            className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
+            className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded text-xl font-semibold"
             onClick={() => setOpen(false)}
           >
             Dashboard
@@ -67,7 +67,7 @@ export default function Sidebar() {
 
           <Link
             href="/inventory"
-            className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
+            className="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded text-xl font-semibold"
             onClick={() => setOpen(false)}
           >
             Inventory
@@ -77,7 +77,7 @@ export default function Sidebar() {
           <div className="flex flex-col">
             <button
               onClick={() => setShowProducts(!showProducts)}
-              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
+              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded text-xl font-semibold"
             >
               Products
               {showProducts ? (
@@ -92,7 +92,7 @@ export default function Sidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm"
+                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-lg"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
@@ -106,7 +106,7 @@ export default function Sidebar() {
           <div className="flex flex-col">
             <button
               onClick={() => setShowCustomers(!showCustomers)}
-              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
+              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded text-xl font-semibold"
             >
               Customers
               {showCustomers ? (
@@ -121,7 +121,7 @@ export default function Sidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm"
+                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-lg"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
@@ -135,7 +135,7 @@ export default function Sidebar() {
           <div className="flex flex-col">
             <button
               onClick={() => setShowOrders(!showOrders)}
-              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
+              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded text-xl font-semibold"
             >
               Orders
               {showOrders ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -146,7 +146,7 @@ export default function Sidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm"
+                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-lg"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
@@ -160,7 +160,7 @@ export default function Sidebar() {
           <div className="flex flex-col">
             <button
               onClick={() => setShowPayments(!showPayments)}
-              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"
+              className="flex justify-between items-center text-gray-700 hover:bg-gray-200 px-3 py-2 rounded text-xl font-semibold"
             >
               Payments
               {showPayments ? (
@@ -175,7 +175,7 @@ export default function Sidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-sm"
+                    className="text-gray-600 hover:bg-gray-100 px-3 py-1 rounded text-lg"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
