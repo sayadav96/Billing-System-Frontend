@@ -149,16 +149,17 @@ export default function OrdersPage() {
                 <p className="text-sm">
                   Date: {new Date(order.date).toLocaleDateString()}
                 </p>
-                <p className="text-sm">
-                  Outstanding: ₹ {order.outstandingAtTime}
-                </p>
-                <p className="text-sm">
-                  Total: ₹ {order.totalAmount.toFixed(2)}
+
+                <p className="text-sm">Previous Balance: ₹{order.oldBalance}</p>
+                <p className="text-sm">Bill Amount: ₹{order.bill}</p>
+                <p className="text-sm">Paid: ₹{order.paid}</p>
+                <p className="text-sm font-semibold">
+                  New Balance: ₹{order.newBalance}
                 </p>
 
                 <ul className="list-disc ml-4 text-sm mt-2">
-                  {order.products.map((p) => (
-                    <li key={p._id}>
+                  {order.products.map((p, idx) => (
+                    <li key={idx}>
                       {p.product?.name || "Unknown"} – {p.quantity} × ₹
                       {p.rateAtPurchase}
                     </li>

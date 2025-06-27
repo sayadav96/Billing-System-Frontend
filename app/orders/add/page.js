@@ -10,10 +10,12 @@ export default function AddOrderPage() {
     billedBy: "",
     isReturn: false,
     products: [],
+    paid: 0,
   });
   const [extraProductId, setExtraProductId] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [oldBalance, setOldBalance] = useState(0);
 
   useEffect(() => {
     fetchCustomers();
@@ -44,6 +46,7 @@ export default function AddOrderPage() {
       };
     });
 
+    setOldBalance(customer?.outstandingAmount || 0);
     setForm((prev) => ({
       ...prev,
       customer: id,
@@ -99,7 +102,7 @@ export default function AddOrderPage() {
     setExtraProductId("");
   };
 
-  const calculateTotal = () => {
+  const calculateBill = () => {
     return form.products.reduce((sum, item) => {
       const rate = parseFloat(item.rateAtPurchase || 0);
       const qty = parseFloat(item.quantity || 0);
@@ -109,12 +112,14 @@ export default function AddOrderPage() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const totalAmount = calculateTotal();
+    const bill = calculateBill();
 
     const payload = {
       customer: form.customer,
       billedBy: form.billedBy,
       isReturn: form.isReturn,
+      paid: parseFloat(form.paid),
+      bill: parseFloat(bill.toFixed(2)),
       products: form.products
         .filter((p) => parseFloat(p.quantity) > 0)
         .map((p) => ({
@@ -122,7 +127,6 @@ export default function AddOrderPage() {
           rateAtPurchase: parseFloat(p.rateAtPurchase),
           quantity: parseFloat(p.quantity),
         })),
-      totalAmount,
     };
 
     try {
@@ -139,14 +143,22 @@ export default function AddOrderPage() {
         customer: "",
         billedBy: "",
         isReturn: false,
+        paid: 0,
         products: [],
       });
+      setOldBalance(0);
     } catch {
       setMessage("❌ Failed to create order");
     } finally {
       setSubmitting(false);
     }
   };
+
+  const total = form.isReturn
+    ? oldBalance - calculateBill()
+    : oldBalance + calculateBill();
+
+  const newBalance = total - parseFloat(form.paid || 0);
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded mt-6">
@@ -176,27 +188,14 @@ export default function AddOrderPage() {
         />
 
         {/* Toggle switch */}
-        <div className="flex items-center gap-3">
-          <label className="flex items-center cursor-pointer">
-            <div className="relative">
-              <input
-                type="checkbox"
-                className="sr-only"
-                checked={form.isReturn}
-                onChange={(e) =>
-                  setForm({ ...form, isReturn: e.target.checked })
-                }
-              />
-              <div className="block bg-gray-300 w-14 h-8 rounded-full"></div>
-              <div
-                className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${
-                  form.isReturn ? "translate-x-full bg-blue-600" : ""
-                }`}
-              ></div>
-            </div>
-            <span className="ml-3 text-sm">Return Order?</span>
-          </label>
-        </div>
+        <label className="flex items-center gap-3">
+          <span>Return Order?</span>
+          <input
+            type="checkbox"
+            checked={form.isReturn}
+            onChange={(e) => setForm({ ...form, isReturn: e.target.checked })}
+          />
+        </label>
 
         {/* Products */}
         <div className="space-y-4">
@@ -209,13 +208,6 @@ export default function AddOrderPage() {
               >
                 <div className="flex justify-between">
                   <p className="font-semibold">{prodInfo?.name || "Unknown"}</p>
-                  <button
-                    onClick={() => removeProduct(p.product)}
-                    className="text-red-600 hover:text-red-800"
-                    title="Remove"
-                  >
-                    <Trash2 size={20} />
-                  </button>
                 </div>
                 <input
                   type="number"
@@ -239,6 +231,13 @@ export default function AddOrderPage() {
                   }
                   className="p-2 border rounded"
                 />
+                <button
+                  onClick={() => removeProduct(p.product)}
+                  className="text-red-600 hover:text-red-800 flex justify-center"
+                  title="Remove"
+                >
+                  <Trash2 size={20} />
+                </button>
               </div>
             );
           })}
@@ -272,14 +271,30 @@ export default function AddOrderPage() {
           )}
         </div>
 
-        <div className="text-right font-semibold text-lg mt-4">
-          Total: ₹ {calculateTotal().toFixed(2)}
+        {/* Payment & Summary */}
+        <input
+          type="number"
+          placeholder="Amount Paid Now"
+          value={form.paid === 0 ? "" : form.paid}
+          onChange={(e) => setForm({ ...form, paid: e.target.value })}
+          className="p-2 border rounded"
+        />
+
+        <div className="mt-4 pt-4 text-sm space-y-1">
+          <p className="font-semibold text-xl">Summary</p>
+          <p>Old Balance: ₹ {oldBalance.toFixed(2)}</p>
+          <p>
+            {form.isReturn ? "Returned" : "Billed"}: ₹{" "}
+            {calculateBill().toFixed(2)}
+          </p>
+          <p>Total: ₹ {total.toFixed(2)}</p>
+          <p>New Balance: ₹ {newBalance.toFixed(2)}</p>
         </div>
 
         <button
           disabled={submitting}
           onClick={handleSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
         >
           {submitting ? "Submitting..." : "Create Order"}
         </button>
